@@ -3,29 +3,23 @@
 
   // Create our module
   angular.module('pkFilters', []) 
-    .service('JsonHelper', function () {
-
-        // Private function to get the value of the property
-        var _getPropertyValue = function (obj, notation) {
-
-            // Get our properties
-            var properties = notation.split('.');
-
-            // Use reduce to get the value of the property
-            return properties.reduce(function (a, b) {
-                return a[b];
-            }, obj);
-        };
+    .service('PKHelperService', function () {
 
         return {
 
             // Get's the value of a nested property if it exists
-            getPropertyValue: _getPropertyValue
-        };
-    })
-    .service('TextHelperService', function () {
+            getPropertyValue: function (obj, notation) {
 
-        return {
+                // Get our properties
+                var properties = notation.split('.');
+
+                // Use reduce to get the value of the property
+                return properties.reduce(function (a, b) {
+                    return a[b];
+                }, obj);
+            },
+            
+            // Convert text to camel case
             convertToCamelCase: function (text) {
 
                 // Get the text length
@@ -53,10 +47,27 @@
 
                 // Return our result
                 return result;
+            },
+
+            // Gets all the filters for an array of states
+            flattenFilters: function (states) {
+
+                // Create an array of filters
+                var filters = [];
+
+                // For each state
+                states.forEach(function (state) {
+
+                    // Merge our filters
+                    filters = filters.concat(state.filters);
+                });
+
+                // Return our array
+                return filters;
             }
         };
     })
-    .service('FilterProductService', ['JsonHelper', function (jsonHelper) {
+    .service('PKProductFilterService', ['PKHelperService', function (helper) {
 
         // Private function for filtering our products
         var _filter = function (products, filters, exclude) {
@@ -146,7 +157,7 @@
 
                 // Get our field
                 var field = fields[i].trim(),
-                    fieldValue = jsonHelper.getPropertyValue(product, field);
+                    fieldValue = helper.getPropertyValue(product, field);
 
                 // Do we match
                 if (_matchField(fieldValue, filter)) {
@@ -297,7 +308,7 @@
             var total = fields.reduce(function (total, field) {
 
                 // Get our number from our field
-                var fieldValue = jsonHelper.getPropertyValue(product, field.trim()),
+                var fieldValue = helper.getPropertyValue(product, field.trim()),
                     number = _extractNumber(fieldValue);
 
                 return total * number;
@@ -392,7 +403,7 @@
         // Return our service
         return service;
     }])
-    .service('FilterMasterProductService', ['FilterProductService', 'TextHelperService', 'ArrayService', function (filterProductService, textHelper, arrayService) {
+    .service('PKMasterProductFilterService', ['PKProductFilterService', 'PKHelperService', 'ArrayService', function (productFilterService, helper, arrayService) {
 
         // Casts a value into it's true type
         var _castTrueType = function (value) {
@@ -415,7 +426,7 @@
         var _exactMatchProduct = function (product, states, criteriaName) {
             
             // Get our fieldName
-            var field = textHelper.convertToCamelCase(criteriaName);
+            var field = helper.convertToCamelCase(criteriaName);
 
             // For each state
             for (var i = 0; i < states.length; i++) {
@@ -429,7 +440,7 @@
                 //}
                 
                 // If our target is the master list AND we find a value OR we find in our master list
-                if ((state.target !== 0 && filterProductService.match(product, state.filters)) || product[field] === value) {
+                if ((state.target !== 0 && productFilterService.match(product, state.filters)) || product[field] === value) {
                     
                     // Return true
                     return true;
@@ -495,69 +506,48 @@
         // Return our service
         return service;
     }])
-    .service('FilterCommonService', function () {
-        return {
-
-            // Gets all the filters for an array of states
-            flattenFilters: function (states) {
-
-                // Create an array of filters
-                var filters = [];
-
-                // For each state
-                states.forEach(function (state) {
-
-                    // Merge our filters
-                    filters = filters.concat(state.filters);
-                });
-
-                // Return our array
-                return filters;
-            },
-        }
-    })
-    .filter('include', ['FilterProductService', function (service) {
+    .filter('include', ['PKProductFilterService', function (service) {
         return function (items, filters) {
 
             // Use our service to filter our items
             return service.include(items, filters);
         };
     }])
-    .filter('exclude', ['FilterProductService', function (service) {
+    .filter('exclude', ['PKProductFilterService', function (service) {
         return function (items, filters) {
 
             // Use our service to filter our items
             return service.exclude(items, filters);
         };
     }])
-    .filter('statesInclude', ['$filter', 'FilterCommonService', function ($filter, shared) {
+    .filter('statesInclude', ['$filter', 'PKHelperService', function ($filter, helper) {
         return function (items, states) {
 
             // Get our filters
-            var filters = shared.flattenFilters(states);
+            var filters = helper.flattenFilters(states);
 
             // Return our filtered items
             return $filter('include')(items, filters);
         };
     }])
-    .filter('statesExclude', ['$filter', 'FilterCommonService', function ($filter, shared) {
+    .filter('statesExclude', ['$filter', 'PKHelperService', function ($filter, helper) {
         return function (items, states) {
 
             // Get our filters
-            var filters = shared.flattenFilters(states);
+            var filters = helper.flattenFilters(states);
 
             // Return our filtered items
             return $filter('exclude')(items, filters);
         };
     }])
-    .filter('masterInclude', ['FilterMasterProductService', function (service) {
+    .filter('masterInclude', ['PKMasterProductFilterService', function (service) {
         return function (items, criteriaName, states) {
 
             // Return our filtered items
             return service.include(items, criteriaName, states);
         };
     }])
-    .filter('masterExclude', ['FilterMasterProductService', function (service) {
+    .filter('masterExclude', ['PKMasterProductFilterService', function (service) {
         return function (items, criteriaName, states) {
 
             // Return our filtered items
