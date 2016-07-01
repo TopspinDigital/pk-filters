@@ -3,7 +3,7 @@
 
   // Create our module
   angular.module('pkFilters', []) 
-    .service('PKHelperService', function () {
+    .service('PKCommonService', function () {
 
         return {
 
@@ -64,10 +64,27 @@
 
                 // Return our array
                 return filters;
+            },
+                
+            // Casts a value into it's true type
+            castTrueType: function (value) {
+
+                // Get our cast types
+                var isNumeric = !isNaN(value);
+                
+                // If we are numeric
+                if (isNumeric) {
+                    
+                    // Return our number
+                    return parseFloat(value);
+                }
+
+                // Return our value
+                return value;
             }
         };
     })
-    .service('PKProductFilterService', ['PKHelperService', function (helper) {
+    .service('PKProductFilterService', ['PKCommonService', function (helper) {
 
         // Private function for filtering our products
         var _filter = function (products, filters, exclude) {
@@ -403,24 +420,7 @@
         // Return our service
         return service;
     }])
-    .service('PKMasterProductFilterService', ['PKProductFilterService', 'PKHelperService', 'ArrayService', function (productFilterService, helper, arrayService) {
-
-        // Casts a value into it's true type
-        var _castTrueType = function (value) {
-
-            // Get our cast types
-            var isNumeric = !isNaN(value);
-            
-            // If we are numeric
-            if (isNumeric) {
-                
-                // Return our number
-                return parseFloat(value);
-            }
-
-            // Return our value
-            return value;
-        };
+    .service('PKMasterProductFilterService', ['PKProductFilterService', 'PKCommonService', 'ArrayService', function (productFilterService, helper, arrayService) {
 
         // The values should be an exact match
         var _exactMatchProduct = function (product, states, criteriaName) {
@@ -433,7 +433,7 @@
 
                 // Get our current state
                 var state = states[i],
-                    value = _castTrueType(state.name);
+                    value = helper.castTrueType(state.name);
 
                 //if (criteriaName === 'Buying drive') {
                 //    console.log(states);
@@ -520,7 +520,7 @@
             return service.exclude(items, filters);
         };
     }])
-    .filter('statesInclude', ['$filter', 'PKHelperService', function ($filter, helper) {
+    .filter('statesInclude', ['$filter', 'PKCommonService', function ($filter, helper) {
         return function (items, states) {
 
             // Get our filters
@@ -530,7 +530,7 @@
             return $filter('include')(items, filters);
         };
     }])
-    .filter('statesExclude', ['$filter', 'PKHelperService', function ($filter, helper) {
+    .filter('statesExclude', ['$filter', 'PKCommonService', function ($filter, helper) {
         return function (items, states) {
 
             // Get our filters
