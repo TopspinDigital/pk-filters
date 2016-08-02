@@ -374,23 +374,10 @@
         var service = {
 
             // Calculates the percentage based on the products
-            calculatePercentageMatch: function (products, filters, target) {
+            calculatePercentageMatch: function (products, filters) {
 
                 // Create a variable for our products
                 var productsToMatch = [];
-
-                // Get our products based on our target
-                switch (target.toLowerCase()) {
-                    case 'availability':
-                        productsToMatch = products.availability;
-                        break;
-                    case 'master':
-                        productsToMatch = products.master;
-                        break;
-                    default:
-                        productsToMatch = products.attributes;
-                        break;
-                }
 
                 // Get our includes
                 var includes = _filter(productsToMatch, filters);
@@ -434,13 +421,9 @@
                 // Get our current state
                 var state = states[i],
                     value = helper.castTrueType(state.name);
-
-                //if (criteriaName === 'Buying drive') {
-                //    console.log(states);
-                //}
                 
                 // If our target is the master list AND we find a value OR we find in our master list
-                if ((state.target !== 0 && productFilterService.match(product, state.filters)) || product[field] === value) {
+                if (product[field] === value) {
                     
                     // Return true
                     return true;
