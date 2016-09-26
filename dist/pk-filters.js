@@ -376,14 +376,15 @@
             // Calculates the percentage based on the products
             calculatePercentageMatch: function (products, filters) {
 
-                // Create a variable for our products
-                var productsToMatch = [];
+                // If we don't have any products, return 0
+                if (!products.length)
+                    return 0;
 
                 // Get our includes
-                var includes = _filter(productsToMatch, filters);
+                var includes = _filter(products, filters);
 
                 // Work out the percentage
-                return includes.length / productsToMatch.length;
+                return includes.length / products.length;
             },
 
             // Includes products that match our filters
