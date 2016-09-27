@@ -434,13 +434,9 @@
                 // Get our current state
                 var state = states[i],
                     value = helper.castTrueType(state.name);
-
-                //if (criteriaName === 'Buying drive') {
-                //    console.log(states);
-                //}
                 
                 // If our target is the master list AND we find a value OR we find in our master list
-                if ((state.target !== 0 && productFilterService.match(product, state.filters)) || product[field] === value) {
+                if (product[field] === value) {
                     
                     // Return true
                     return true;
