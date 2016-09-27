@@ -436,7 +436,7 @@
                     value = helper.castTrueType(state.name);
                 
                 // If our target is the master list AND we find a value OR we find in our master list
-                if (product[field] === value) {
+                if ((state.target.toLowerCase() === "master" && productFilterService.match(product, state.filters)) || product[field] === value) {
                     
                     // Return true
                     return true;
