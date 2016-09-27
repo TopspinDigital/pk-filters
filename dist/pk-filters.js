@@ -345,7 +345,7 @@
                 if (!isNaN(fieldValue)) {
 
                     // Return our number
-                    return fieldValue;
+                    return parseFloat(fieldValue);
                 }
 
                 // Get our parts
@@ -361,7 +361,7 @@
                     if (!isNaN(part)) {
 
                         // Return our part
-                        return part;
+                        return parseInt(fieldValue);
                     }
                 }
             }
