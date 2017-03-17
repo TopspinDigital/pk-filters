@@ -166,14 +166,8 @@
 
         ///////////////////////////////////////////////////////////////////////////////////////
 
-        // Our math operators
-        var _operators = {
-            '*': function (a, b) { return a * b },
-            '/': function (a, b) { return a / b }
-        };
-
         // Private function for filtering our products
-        var _filter = function (products, filters, exclude) {
+        function _filter(products, filters, exclude) {
 
             // If we have no filters
             if (!filters || !filters.length) {
@@ -208,7 +202,7 @@
         };
 
         // Private function for matching fields (OR)
-        var _matchFields = function (product, filter) {
+        function _matchFields(product, filter) {
 
             // Get our fields
             var fields = filter.field.split(',');
@@ -222,9 +216,10 @@
                 case '/<':
 
                     // Get our value
-                    var fieldValue = _mathFields(product, fields, filter.operator.substring(0)),
+                    var mathOperator = filter.operator.substring(0, 1),
+                        fieldValue = mathOperator === '*' ? _multipleFields(product, fields) : _divideFields(product, fields),
                         operator = filter.operator.substring(1);
-
+                    
                     // Return our match
                     return _matchUsingOperator(operator, fieldValue, filter.expression);
                 default:
@@ -250,7 +245,7 @@
         };
 
         // Private function for matching properties (AND)
-        var _matchField = function (fieldValue, filter) {
+        function _matchField(fieldValue, filter) {
 
             // Our variables
             var values = filter.expression.split(',');
@@ -274,7 +269,7 @@
         };
 
         // Private function for matching using the operator
-        var _matchUsingOperator = function (operator, fieldValue, expression) {
+        function _matchUsingOperator(operator, fieldValue, expression) {
 
             // Do a switch using our operator
             switch (operator) {
@@ -314,7 +309,7 @@
         };
 
         // Private function for detecting likeness
-        var _isLike = function (fieldValue, expression) {
+        function _isLike(fieldValue, expression) {
 
             // If we have no fieldValue, return false
             if (!fieldValue && typeof fieldValue !== 'boolean')
@@ -325,7 +320,7 @@
         };
 
         // Private function for working out if we have matching fieldValue
-        var _isEqual = function (fieldValue, expression) {
+        function _isEqual(fieldValue, expression) {
 
             // If we have no fieldValue, return false
             if (!fieldValue)
@@ -336,7 +331,7 @@
         };
 
         // Private function to work out if it matches our boolean 
-        var _isBoolean = function (fieldValue, expression) {
+        function _isBoolean(fieldValue, expression) {
 
             // If we don't have a field value
             if (!fieldValue) {
@@ -360,7 +355,7 @@
         }
 
         // Private function for working out if our expression is greater than our fieldValue
-        var _isGreaterThan = function (fieldValue, expression) {
+        function _isGreaterThan(fieldValue, expression) {
 
             // Get our number
             var number = _extractNumber(fieldValue);
@@ -370,7 +365,7 @@
         };
 
         // Private function for working out if our expression is less than our fieldValue
-        var _isLessThan = function (fieldValue, expression) {
+        function _isLessThan(fieldValue, expression) {
 
             // Get our number
             var number = _extractNumber(fieldValue);
@@ -380,7 +375,7 @@
         };
 
         // Private function to multiply field values together
-        var _mathFields = function (product, fields, operator) {
+        function _multipleFields(product, fields) {
 
             // Calculate our total        
             var total = fields.reduce(function (total, field) {
@@ -389,15 +384,32 @@
                 var fieldValue = helper.getPropertyValue(product, field.trim()),
                     number = _extractNumber(fieldValue);
 
-                return _operators[operator](total, number);
+                return total * number;
             }, 1);
 
             // Return our total
             return total;
         };
 
+        // Private function to divide field values together
+        function _divideFields(product, fields) {
+
+            // Calculate our total        
+            var total = fields.reduce(function (total, field) {
+
+                // Get our number from our field
+                var fieldValue = helper.getPropertyValue(product, field.trim()),
+                    number = _extractNumber(fieldValue);
+
+                return total ? total / number : number;
+            }, 0);
+
+            // Return our total
+            return total;
+        };
+
         // Extracts a number from our expression
-        var _extractNumber = function (fieldValue) {
+        function _extractNumber(fieldValue) {
 
             // If we have some fieldValue
             if (fieldValue) {
@@ -487,8 +499,8 @@
         ///////////////////////////////////////////////////////////////////////////////////////
 
         // Filter our products
-        var _filterProducts = function (products, criteriaName, states, exclude) {
-            
+        function _filterProducts(products, criteriaName, states, exclude) {
+
             // If we have no states
             if (!states || !states.length) {
 
@@ -504,7 +516,7 @@
 
                 // Get our match
                 var matched = exactMatchProduct(product, states, criteriaName);
-                
+
                 // If we should exclude or include
                 if (exclude && !matched || !exclude && matched) {
 
@@ -515,7 +527,7 @@
 
             // Return our included products
             return filtered;
-        }
+        };
     }])
     .filter('include', ['PKProductFilterService', function (service) {
         return function (items, filters) {
