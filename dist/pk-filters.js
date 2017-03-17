@@ -6,123 +6,135 @@
     .service('PKCommonService', function () {
 
         return {
-
-            // Get's the value of a nested property if it exists
-            getPropertyValue: function (obj, notation) {
-
-                // Get our properties
-                var properties = notation.split('.');
-
-                // Use reduce to get the value of the property
-                return properties.reduce(function (a, b) {
-                    return a[b];
-                }, obj);
-            },
-            
-            // Convert text to camel case
-            convertToCamelCase: function (text) {
-
-                // Get the text length
-                var len = text.length;
-
-                // Make our first character lowercase
-                var result = text.substring(0, 1).toLowerCase() + text.substring(1, len);
-
-                // Split by spaces
-                var parts = result.split(' ');
-
-                // If we have more than 1 part
-                if (parts.length > 1) {
-
-                    // Get our result using reduce
-                    var result = parts.reduce(function (previousItem, currentItem, index) {
-
-                        // Captilize the current item only if we are not the first item
-                        var capitalize = index > 0 ? currentItem.substring(0, 1).toUpperCase() + currentItem.substring(1, len) : currentItem;
-
-                        // Return the previousItem plus the new item
-                        return previousItem + capitalize;
-                    }, '');
-                }
-
-                // Return our result
-                return result;
-            },
-
-            // Gets all the filters for an array of states
-            flattenFilters: function (states) {
-
-                // Create an array of filters
-                var filters = [];
-
-                // For each state
-                states.forEach(function (state) {
-
-                    // Merge our filters
-                    filters = filters.concat(state.filters);
-                });
-
-                // Return our array
-                return filters;
-            },
-                
-            // Casts a value into it's true type
-            castTrueType: function (value) {
-
-                // Get our cast types
-                var isNumeric = !isNaN(value);
-                
-                // If we are numeric
-                if (isNumeric) {
-                    
-                    // Return our number
-                    return parseFloat(value);
-                }
-
-                // Return our value
-                return value;
-            }
+            getPropertyValue: getPropertyValue,
+            convertToCamelCase: convertToCamelCase,
+            flattenFilters: flattenFilters,
+            castTrueType: castTrueType
         };
+
+        ///////////////////////////////////////////////////////////////////////////////////////
+
+        // Get's the value of a nested property if it exists
+        function getPropertyValue(obj, notation) {
+
+            // Get our properties
+            var properties = notation.split('.');
+
+            // Use reduce to get the value of the property
+            return properties.reduce(function (a, b) {
+                return a[b];
+            }, obj);
+        };
+
+        // Convert text to camel case
+        function convertToCamelCase(text) {
+
+            // Get the text length
+            var len = text.length;
+
+            // Make our first character lowercase
+            var result = text.substring(0, 1).toLowerCase() + text.substring(1, len);
+
+            // Split by spaces
+            var parts = result.split(' ');
+
+            // If we have more than 1 part
+            if (parts.length > 1) {
+
+                // Get our result using reduce
+                var result = parts.reduce(function (previousItem, currentItem, index) {
+
+                    // Captilize the current item only if we are not the first item
+                    var capitalize = index > 0 ? currentItem.substring(0, 1).toUpperCase() + currentItem.substring(1, len) : currentItem;
+
+                    // Return the previousItem plus the new item
+                    return previousItem + capitalize;
+                }, '');
+            }
+
+            // Return our result
+            return result;
+        };
+
+        // Gets all the filters for an array of states
+        function flattenFilters(states) {
+
+            // Create an array of filters
+            var filters = [];
+
+            // For each state
+            states.forEach(function (state) {
+
+                // Merge our filters
+                filters = filters.concat(state.filters);
+            });
+
+            // Return our array
+            return filters;
+        };
+
+        // Casts a value into it's true type
+        function castTrueType(value) {
+
+            // Get our cast types
+            var isNumeric = !isNaN(value);
+                
+            // If we are numeric
+            if (isNumeric) {
+                    
+                // Return our number
+                return parseFloat(value);
+            }
+
+            // Return our value
+            return value;
+        }
     })
     .service('PKProductFilterService', ['PKCommonService', function (helper) {
 
-        // Private function for filtering our products
-        var _filter = function (products, filters, exclude) {
-
-            // If we have no filters
-            if (!filters || !filters.length) {
-                
-                // Return our products
-                return exclude ? products : [];
-            }
-
-            // Create our array
-            var filtered = [];
-
-            // If we have any products
-            if (products && products.length) {
-
-                // For each product
-                products.forEach(function (product) {
-
-                    // Create a boolean which is updated when matched
-                    var matched = _matchItem(product, filters);
-
-                    // If we should exclude and we don't have a match
-                    if (exclude && !matched || !exclude && matched) {
-
-                        // Add to our array
-                        filtered.push(product);
-                    }
-                });
-            }
-
-            // Return our array
-            return filtered;
+        // Create our service
+        var service = {
+            calculatePercentageMatch: calculatePercentageMatch,
+            include: include,
+            exclude: exclude,
+            match: matchItem
         };
 
-        // Private function for matching a single product to a set of filters
-        var _matchItem = function (product, filters) {
+        // Return our service
+        return service;
+
+        ///////////////////////////////////////////////////////////////////////////////////////
+
+        // Calculates the percentage based on the products
+        function calculatePercentageMatch(products, filters) {
+
+            // If we don't have any products, return 0
+            if (!products.length)
+                return 0;
+
+            // Get our includes
+            var includes = _filter(products, filters);
+
+            // Work out the percentage
+            return includes.length / products.length;
+        };
+
+        // Includes products that match our filters
+        function include(products, filters) {
+
+            // Return our filtered products
+            return _filter(products, filters);
+        };
+
+        // Excludes products that match our filters
+        function exclude(products, filters) {
+
+            // Return our filtered products
+            return _filter(products, filters, true);
+        };
+
+        // Matches a single product to a set of filters
+        function matchItem(product, filters) {
 
             // Boolean to hold our match
             var matched = false;
@@ -150,6 +162,49 @@
 
             // Return our matched value or not
             return matched;
+        };
+
+        ///////////////////////////////////////////////////////////////////////////////////////
+
+        // Our math operators
+        var _operators = {
+            '*': function (a, b) { return a * b },
+            '/': function (a, b) { return a / b }
+        };
+
+        // Private function for filtering our products
+        var _filter = function (products, filters, exclude) {
+
+            // If we have no filters
+            if (!filters || !filters.length) {
+                
+                // Return our products
+                return exclude ? products : [];
+            }
+
+            // Create our array
+            var filtered = [];
+
+            // If we have any products
+            if (products && products.length) {
+
+                // For each product
+                products.forEach(function (product) {
+
+                    // Create a boolean which is updated when matched
+                    var matched = matchItem(product, filters);
+
+                    // If we should exclude and we don't have a match
+                    if (exclude && !matched || !exclude && matched) {
+
+                        // Add to our array
+                        filtered.push(product);
+                    }
+                });
+            }
+
+            // Return our array
+            return filtered;
         };
 
         // Private function for matching fields (OR)
@@ -239,10 +294,6 @@
                 // Is NOT like
                 case '!%':
                     return !_isLike(fieldValue, expression);
-
-                // Is divide equal
-                case '/':
-                    return !isDivideEqual(fieldValue, expression);
 
                 // Is greater than
                 case '>':
@@ -343,12 +394,6 @@
 
             // Return our total
             return total;
-        }
-
-        // Our math operators
-        var _operators = {
-            '*': function (a, b) { return a * b },
-            '/': function (a, b) { return a / b }
         };
 
         // Extracts a number from our expression
@@ -385,50 +430,38 @@
             // Fallback
             return 0;
         };
+    }])
+    .service('PKMasterProductFilterService', ['PKProductFilterService', 'PKCommonService', 'ArrayService', function (productFilterService, helper, arrayService) {
 
         // Create our service
         var service = {
-
-            // Calculates the percentage based on the products
-            calculatePercentageMatch: function (products, filters) {
-
-                // If we don't have any products, return 0
-                if (!products.length)
-                    return 0;
-
-                // Get our includes
-                var includes = _filter(products, filters);
-
-                // Work out the percentage
-                return includes.length / products.length;
-            },
-
-            // Includes products that match our filters
-            include: function (products, filters) {
-                            
-                // Return our filtered products
-                return _filter(products, filters);
-            },
-
-            // Excludes products that match our filters
-            exclude: function (products, filters) {
-
-                // Return our filtered products
-                return _filter(products, filters, true);
-            },
-
-            // Matches a single product to a set of filters
-            match: _matchItem
+            include: include,
+            exclude: exclude,
+            exactMatch: exactMatchProduct
         };
 
         // Return our service
         return service;
-    }])
-    .service('PKMasterProductFilterService', ['PKProductFilterService', 'PKCommonService', 'ArrayService', function (productFilterService, helper, arrayService) {
 
-        // The values should be an exact match
-        var _exactMatchProduct = function (product, states, criteriaName) {
-            
+        ///////////////////////////////////////////////////////////////////////////////////////
+
+        // Use states to see which master products are included
+        function include(products, criteriaName, states) {
+
+            // Return our filtered list
+            return _filterProducts(products, criteriaName, states);
+        };
+
+        // Use states to see which master products are excluded
+        function exclude(products, criteriaName, states) {
+
+            // Return our filtered list
+            return _filterProducts(products, criteriaName, states, true);
+        };
+
+        // Exact match for a product
+        function exactMatchProduct(product, states, criteriaName) {
+
             // Get our fieldName
             var field = helper.convertToCamelCase(criteriaName);
 
@@ -438,10 +471,10 @@
                 // Get our current state
                 var state = states[i],
                     value = helper.castTrueType(state.name);
-                
+
                 // If our target is the master list AND we find a value OR we find in our master list
                 if ((state.target.toLowerCase() === "master" && productFilterService.match(product, state.filters)) || product[field] === value) {
-                    
+
                     // Return true
                     return true;
                 }
@@ -450,6 +483,8 @@
             // Fallback
             return false;
         };
+
+        ///////////////////////////////////////////////////////////////////////////////////////
 
         // Filter our products
         var _filterProducts = function (products, criteriaName, states, exclude) {
@@ -468,7 +503,7 @@
             products.forEach(function (product) {
 
                 // Get our match
-                var matched = _exactMatchProduct(product, states, criteriaName);
+                var matched = exactMatchProduct(product, states, criteriaName);
                 
                 // If we should exclude or include
                 if (exclude && !matched || !exclude && matched) {
@@ -481,30 +516,6 @@
             // Return our included products
             return filtered;
         }
-    
-        // Create our service
-        var service = {
-
-            // Use states to see which master products are included
-            include: function (products, criteriaName, states) {
-                
-                // Return our filtered list
-                return _filterProducts(products, criteriaName, states);
-            },
-
-            // Use states to see which master products are excluded
-            exclude: function (products, criteriaName, states) {
-
-                // Return our filtered list
-                return _filterProducts(products, criteriaName, states, true);
-            },
-
-            // Exact match for a product
-            exactMatch: _exactMatchProduct
-        };
-
-        // Return our service
-        return service;
     }])
     .filter('include', ['PKProductFilterService', function (service) {
         return function (items, filters) {
