@@ -22,6 +22,6 @@
     "tests"
   ],
   "dependencies" : {
-    "angular-arrays": "^1.0.3"
+    "angular-arrays": "^2.0.0"
   }
 }
