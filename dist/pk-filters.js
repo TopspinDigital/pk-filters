@@ -158,34 +158,40 @@
             // Get our fields
             var fields = filter.field.split(',');
 
-            // Check to see if we are multiplying
-            if (filter.operator === '*=' || filter.operator === '*>' || filter.operator === '*<') {
-                
-                // Get our value
-                var fieldValue = _multiplyFields(product, fields),
-                    operator = filter.operator.substring(1);
+            switch (filter.operator) {
+                case '*=':
+                case '*>':
+                case '*<':
+                case '/=':
+                case '/>':
+                case '/<':
 
-                // Return our match
-                return _matchUsingOperator(operator, fieldValue, filter.expression);
+                    // Get our value
+                    var fieldValue = _mathFields(product, fields, filter.operator.substring(0)),
+                        operator = filter.operator.substring(1);
+
+                    // Return our match
+                    return _matchUsingOperator(operator, fieldValue, filter.expression);
+                default:
+
+                    // Loop through our fields
+                    for (var i = 0; i < fields.length; i++) {
+
+                        // Get our field
+                        var field = fields[i].trim(),
+                            fieldValue = helper.getPropertyValue(product, field);
+
+                        // Do we match
+                        if (_matchField(fieldValue, filter)) {
+
+                            // Return true
+                            return true;
+                        }
+                    }
+
+                    // Fallback
+                    return false;
             }
-
-            // Loop through our fields
-            for (var i = 0; i < fields.length; i++) {
-
-                // Get our field
-                var field = fields[i].trim(),
-                    fieldValue = helper.getPropertyValue(product, field);
-
-                // Do we match
-                if (_matchField(fieldValue, filter)) {
-
-                    // Return true
-                    return true;
-                }
-            }
-
-            // Fallback
-            return false;
         };
 
         // Private function for matching properties (AND)
@@ -233,6 +239,10 @@
                 // Is NOT like
                 case '!%':
                     return !_isLike(fieldValue, expression);
+
+                // Is divide equal
+                case '/':
+                    return !isDivideEqual(fieldValue, expression);
 
                 // Is greater than
                 case '>':
@@ -319,7 +329,7 @@
         };
 
         // Private function to multiply field values together
-        var _multiplyFields = function (product, fields) {
+        var _mathFields = function (product, fields, operator) {
 
             // Calculate our total        
             var total = fields.reduce(function (total, field) {
@@ -328,12 +338,18 @@
                 var fieldValue = helper.getPropertyValue(product, field.trim()),
                     number = _extractNumber(fieldValue);
 
-                return total * number;
+                return _operators[operator](total, number);
             }, 1);
 
             // Return our total
             return total;
         }
+
+        // Our math operators
+        var _operators = {
+            '*': function (a, b) { return a * b },
+            '/': function (a, b) { return a / b }
+        };
 
         // Extracts a number from our expression
         var _extractNumber = function (fieldValue) {
