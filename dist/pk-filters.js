@@ -3,8 +3,65 @@
 
   // Create our module
   angular.module('pkFilters', []) 
-    .service('PKCommonService', function () {
+    .service('pkCommon', commonService)
+    .service('pkProductFilters', productFilterService)
+    .service('pkMasterProductFilters', masterProductFilterService)
+    .filter('include', ['PKProductFilterService', function (service) {
+        return function (items, filters) {
 
+            // Use our service to filter our items
+            return service.include(items, filters);
+        };
+    }])
+    .filter('exclude', ['PKProductFilterService', function (service) {
+        return function (items, filters) {
+
+            // Use our service to filter our items
+            return service.exclude(items, filters);
+        };
+    }])
+    .filter('statesInclude', ['$filter', 'PKCommonService', function ($filter, helper) {
+        return function (items, states) {
+
+            // Get our filters
+            var filters = helper.flattenFilters(states);
+
+            // Return our filtered items
+            return $filter('include')(items, filters);
+        };
+    }])
+    .filter('statesExclude', ['$filter', 'PKCommonService', function ($filter, helper) {
+        return function (items, states) {
+
+            // Get our filters
+            var filters = helper.flattenFilters(states);
+
+            // Return our filtered items
+            return $filter('exclude')(items, filters);
+        };
+    }])
+    .filter('masterInclude', ['PKMasterProductFilterService', function (service) {
+        return function (items, criteriaName, states) {
+
+            // Return our filtered items
+            return service.include(items, criteriaName, states);
+        };
+    }])
+    .filter('masterExclude', ['PKMasterProductFilterService', function (service) {
+        return function (items, criteriaName, states) {
+
+            // Return our filtered items
+            return service.exclude(items, criteriaName, states);
+        };
+    }]);
+}());
+
+(function() {
+  'use strict';
+
+  angular.module('pkFilters');
+
+  function commonService() {
         return {
             getPropertyValue: getPropertyValue,
             convertToCamelCase: convertToCamelCase,
@@ -37,6 +94,9 @@
 
             // Split by spaces
             var parts = result.split(' ');
+
+			// Force the first part to lower
+			parts[0] = parts[0].toLowerCase();
 
             // If we have more than 1 part
             if (parts.length > 1) {
@@ -88,9 +148,12 @@
 
             // Return our value
             return value;
-        }
-    })
-    .service('PKProductFilterService', ['PKCommonService', function (helper) {
+        }; 
+  };
+
+  productFilterService.$inject = ['pkCommon'];
+
+  function productFilterService(helper) {
 
         // Create our service
         var service = {
@@ -442,8 +505,11 @@
             // Fallback
             return 0;
         };
-    }])
-    .service('PKMasterProductFilterService', ['PKProductFilterService', 'PKCommonService', 'ArrayService', function (productFilterService, helper, arrayService) {
+    };
+
+    masterProductFilterService.$inject = ['pkProductFilters', 'pkCommon', 'ArrayService'];
+
+    function masterProductFilterService(productFilterService, helper, arrayService) {
 
         // Create our service
         var service = {
@@ -528,59 +594,5 @@
             // Return our included products
             return filtered;
         };
-    }])
-    .filter('include', ['PKProductFilterService', function (service) {
-        return function (items, filters) {
-
-            // Use our service to filter our items
-            return service.include(items, filters);
-        };
-    }])
-    .filter('exclude', ['PKProductFilterService', function (service) {
-        return function (items, filters) {
-
-            // Use our service to filter our items
-            return service.exclude(items, filters);
-        };
-    }])
-    .filter('statesInclude', ['$filter', 'PKCommonService', function ($filter, helper) {
-        return function (items, states) {
-
-            // Get our filters
-            var filters = helper.flattenFilters(states);
-
-            // Return our filtered items
-            return $filter('include')(items, filters);
-        };
-    }])
-    .filter('statesExclude', ['$filter', 'PKCommonService', function ($filter, helper) {
-        return function (items, states) {
-
-            // Get our filters
-            var filters = helper.flattenFilters(states);
-
-            // Return our filtered items
-            return $filter('exclude')(items, filters);
-        };
-    }])
-    .filter('masterInclude', ['PKMasterProductFilterService', function (service) {
-        return function (items, criteriaName, states) {
-
-            // Return our filtered items
-            return service.include(items, criteriaName, states);
-        };
-    }])
-    .filter('masterExclude', ['PKMasterProductFilterService', function (service) {
-        return function (items, criteriaName, states) {
-
-            // Return our filtered items
-            return service.exclude(items, criteriaName, states);
-        };
-    }]);
-}());
-
-(function() {
-  'use strict';
-
-  angular.module('pkFilters');
+    };
 }());
