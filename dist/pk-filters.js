@@ -561,21 +561,21 @@
   'use strict';
   
   angular.module('pkFilters')
-    .filter('include', ['PKProductFilterService', function (service) {
+    .filter('include', ['pkProductFilters', function (service) {
         return function (items, filters) {
 
             // Use our service to filter our items
             return service.include(items, filters);
         };
     }])
-    .filter('exclude', ['PKProductFilterService', function (service) {
+    .filter('exclude', ['pkProductFilters', function (service) {
         return function (items, filters) {
 
             // Use our service to filter our items
             return service.exclude(items, filters);
         };
     }])
-    .filter('statesInclude', ['$filter', 'PKCommonService', function ($filter, helper) {
+    .filter('statesInclude', ['$filter', 'pkCommon', function ($filter, helper) {
         return function (items, states) {
 
             // Get our filters
@@ -585,7 +585,7 @@
             return $filter('include')(items, filters);
         };
     }])
-    .filter('statesExclude', ['$filter', 'PKCommonService', function ($filter, helper) {
+    .filter('statesExclude', ['$filter', 'pkCommon', function ($filter, helper) {
         return function (items, states) {
 
             // Get our filters
@@ -595,14 +595,14 @@
             return $filter('exclude')(items, filters);
         };
     }])
-    .filter('masterInclude', ['PKMasterProductFilterService', function (service) {
+    .filter('masterInclude', ['pkMasterProductFilters', function (service) {
         return function (items, criteriaName, states) {
 
             // Return our filtered items
             return service.include(items, criteriaName, states);
         };
     }])
-    .filter('masterExclude', ['PKMasterProductFilterService', function (service) {
+    .filter('masterExclude', ['pkMasterProductFilters', function (service) {
         return function (items, criteriaName, states) {
 
             // Return our filtered items
