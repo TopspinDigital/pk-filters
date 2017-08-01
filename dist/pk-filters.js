@@ -43,9 +43,6 @@
             // Split by spaces
             var parts = result.split(' ');
 
-			// Force the first part to lower
-			parts[0] = parts[0].toLowerCase();
-
             // If we have more than 1 part
             if (parts.length > 1) {
 
@@ -53,7 +50,7 @@
                 var result = parts.reduce(function (previousItem, currentItem, index) {
 
                     // Captilize the current item only if we are not the first item
-                    var capitalize = index > 0 ? currentItem.substring(0, 1).toUpperCase() + currentItem.substring(1, len) : currentItem;
+                    var capitalize = index > 0 ? currentItem.substring(0, 1).toUpperCase() + currentItem.substring(1, len) : currentItem.toLowerCase();
 
                     // Return the previousItem plus the new item
                     return previousItem + capitalize;
