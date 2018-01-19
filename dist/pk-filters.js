@@ -310,7 +310,7 @@
               }
           };
   
-          function _matchUsingSingleOperator(operator, fieldValue, epxression) {
+          function _matchUsingSingleOperator(operator, fieldValue, expression) {
               switch (operator) {
   
                   // Is equal
