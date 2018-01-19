@@ -246,6 +246,9 @@
                 case '===':
                     return _isBoolean(fieldValue, expression);
 
+                case '><':
+                    return _isBetween(fieldValue, expression);
+
                 // If we are neither of the operators, return false
                 default:
                     return false;
@@ -296,6 +299,17 @@
 
             // Should never reach this
             return false;
+        }
+
+        function _isBetween(fieldValue, expression) {
+            var expressions = fieldValue.split(',');
+            if (expressions.length != 2) return false;
+            
+            var minValue = _extractNumber(expressions[0]),
+                maxValue = _extractNumber(expressions[1]),
+                actual = _extractNumber(fieldValue);
+                
+            return actual > minValue && actual < maxValue;
         }
 
         // Private function for working out if our expression is greater than our fieldValue
